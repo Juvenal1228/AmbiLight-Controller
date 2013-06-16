@@ -9,8 +9,10 @@ unsigned char pwmFrequency = 100;
 #include "commands.h"
 #include "channels.h"
 
-// RawHID packet buffer
+// RawHID packet buffers
 byte buffer[64];
+byte outBuffer[MAX_DATA_LENGTH];
+int outPtr = 0;
 
 /*
  * handles a command at the specified index in buffer
@@ -51,23 +53,65 @@ void loop() {
   
   while (ptr < dataEnd) {
     int dataBytes = handleCommand(buffer, ptr++, dataEnd - ptr);
-    if (dataBytes < 0) return; // invalid command
+    if (dataBytes < 0) {
+      Serial.print("Error Processing Packet: ");
+      Serial.println(dataBytes);
+      break;
+    }
     ptr += dataBytes;
   }
+  
+  if (outPtr > 0) {
+    int ret = sendRawHIDPacket(outBuffer, outPtr);
+    if (ret > 0) {
+      memset(outBuffer, 0, sizeof(outBuffer));
+      outPtr = 0;
+    }
+  }
+}
+
+int sendRawHIDPacket(byte* data, int dataSize) {
+  if (dataSize > MAX_DATA_LENGTH) return BUFFER_ERROR;
+  
+  byte buf[64] = {0};
+  
+  buf[0] = MAGIC_BYTE0;
+  buf[1] = MAGIC_BYTE1;
+  buf[2] = dataSize;
+  
+  memcpy(&buf[3], data, dataSize);
+  
+  return RawHID.send(buf, 0);
 }
 
 int handleCommand(byte *buffer, int ptr, int maxDataSize) {
   byte commandCode = buffer[ptr++];
+  Command handler;
   
   for (int i = 0; i < num_handlers; i++) {
+    handler = handlers[i];
     // check command code
-    if (handlers[i].commandCode != commandCode) continue;
+    if (handler.commandCode != commandCode) continue;
     
-    if (handlers[i].inSize > maxDataSize) return BUFFER_ERROR;
+    if (handler.inSize > maxDataSize) return BUFFER_ERROR;
     
-    // TODO: output buffer
-    int outSize = handlers[i].handler(&buffer[ptr], &buffer[ptr]);
-    return handlers[i].inSize;
+    // variable size output commands need to be the only in the chain
+    if (handler.outSize < 0 && outPtr != 0) {
+      return CHAIN_ERROR;
+    }
+    
+    // flush output if packet is full
+    if (handler.outSize > 0 && handler.outSize + outPtr > MAX_DATA_LENGTH) {
+      int ret = sendRawHIDPacket(outBuffer, outPtr);
+      if (ret <= -1) return TRANSMIT_ERROR;
+      if (ret <= 0) return TIMEOUT_ERROR;
+      
+      memset(outBuffer, 0, sizeof(outBuffer));
+      outPtr = 0;
+    }
+    
+    outPtr += handler.handler(&buffer[ptr], &outBuffer[outPtr]);
+    return handler.inSize;
   }
   
   return INVALID_CMD;

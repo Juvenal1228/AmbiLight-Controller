@@ -50,6 +50,9 @@ typedef struct {
 #define NO_DATA 0
 #define INVALID_CMD -1
 #define BUFFER_ERROR -2
+#define TRANSMIT_ERROR -3
+#define TIMEOUT_ERROR -4
+#define CHAIN_ERROR -5
 
 /*
  * Print interrrupt load over serial
@@ -120,4 +123,14 @@ typedef struct {
  * No Output Data
  */
 #define CMD_CHANRGB     0x07
+
+/*
+ * Returns the number of channels
+ * No Input Data
+ * Output Data:
+ *  +--------------------+
+ *  | Number Of Channels |
+ *  +--------------------+
+ */
+#define CMD_NUMCHANS  0x08
 #endif

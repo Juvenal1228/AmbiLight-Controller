@@ -9,6 +9,7 @@ const Command handlers[] = {
   { CMD_CHANOFF,         1, NO_DATA, handle_chanOff },
   { CMD_CHANSET,         2, NO_DATA, handle_chanSet },
   { CMD_CHANRGB,         4, NO_DATA, handle_chanRGB },
+  { CMD_NUMCHANS,  NO_DATA,       1, handle_numChans },
 };
 
 const int num_handlers = sizeof(handlers) / sizeof(Command);
@@ -70,4 +71,10 @@ int handle_chanRGB(byte* inData, byte* outData) {
   setRGB(chan, r, g, b);
   
   return NO_DATA;
+}
+
+int handle_numChans(byte* inData, byte* outData) {
+  outData[0] = (byte)num_channels;
+  
+  return 1;
 }
