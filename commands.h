@@ -53,6 +53,7 @@ typedef struct {
 #define TRANSMIT_ERROR -3
 #define TIMEOUT_ERROR -4
 #define CHAIN_ERROR -5
+#define CHAN_ERROR -6
 
 /*
  * Print interrrupt load over serial
@@ -70,17 +71,6 @@ typedef struct {
 #define CMD_ALLOFF      0x02
 
 /*
- * Sets all output channels to the same value
- * Input Data:
- *  +-------+
- *  | Value |
- *  +-------+
- *
- * No Output Data
- */
-#define CMD_ALLSET      0x03
-
-/*
  * Set all RGB groups to an RGB value
  * Input Data:
  *  +---+---+---+
@@ -89,7 +79,7 @@ typedef struct {
  *
  * No Output Data
  */
-#define CMD_ALLRGB      0x04
+#define CMD_ALLRGB      0x03
 
 /*
  * Turns off a specified channel
@@ -100,18 +90,7 @@ typedef struct {
  *
  * No Output Data
  */
-#define CMD_CHANOFF     0x05
-
-/*
- * Set a specified channel value
- * Input Data:
- *  +---------+-------+
- *  | Channel | Value |
- *  +---------+-------+
- *
- * No Output Data
- */
-#define CMD_CHANSET     0x06
+#define CMD_CHANOFF     0x04
 
 /*
  * Set a specified RGB group to an RGB value
@@ -122,7 +101,7 @@ typedef struct {
  *
  * No Output Data
  */
-#define CMD_CHANRGB     0x07
+#define CMD_CHANRGB     0x05
 
 /*
  * Returns the number of channels
@@ -132,5 +111,5 @@ typedef struct {
  *  | Number Of Channels |
  *  +--------------------+
  */
-#define CMD_NUMCHANS  0x08
+#define CMD_NUMCHANS  0x06
 #endif

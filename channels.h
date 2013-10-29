@@ -22,7 +22,6 @@ extern int numShiftRegisters;
 
 #define forEachChannel(x)    for (int x = 0; x < num_channels; x++)
 
-
 const byte channels[] = {
   // ShiftPWM Channels
   ISRGB, 0, 0, // RGB1
@@ -37,10 +36,10 @@ const byte channels[] = {
   // PWM Channels
   ISRGB | PWM(5),  PWM(4),  PWM(3),  //RGB9
   ISRGB | PWM(10), PWM(9),  PWM(6),  //RGB10
-  ISRGB | PWM(23), PWM(22), PWM(21), //RGB11
+  ISRGB | PWM(22), PWM(21), PWM(20), //RGB11
 };
 
-const int num_channels = sizeof(channels) / sizeof(byte);
+const int num_channels = sizeof(channels) / sizeof(byte) * 3;
 int numShiftOutputs = 0;
 int numShiftRegisters = 0;
 

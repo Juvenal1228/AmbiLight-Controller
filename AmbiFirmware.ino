@@ -2,7 +2,8 @@
 const int T3ShiftPWM_latchPin = 8;
 unsigned char maxBrightness = 255;
 unsigned char pwmFrequency = 100;
-
+byte val = 0;
+byte last = 0;
 #include <SPI.h>
 #include <T3ShiftPWM.h>
 
@@ -30,13 +31,50 @@ void setup() {
   Serial.println("AmbiLight Controller Active");
 }
 
+void print_hex(int v, int num_places)
+{
+    int mask=0, n, num_nibbles, digit;
+
+    for (n=1; n<=num_places; n++)
+    {
+        mask = (mask << 1) | 0x0001;
+    }
+    v = v & mask; // truncate v to specified number of places
+
+    num_nibbles = num_places / 4;
+    if ((num_places % 4) != 0)
+    {
+        ++num_nibbles;
+    }
+
+    do
+    {
+        digit = ((v >> (num_nibbles-1) * 4)) & 0x0f;
+        Serial.print(digit, HEX);
+    } while(--num_nibbles);
+
+}
+
 void loop() {
+  //if (val != last) {
+  //  last = val;
+  //  Serial.println(val, BIN);
+  //}
+  
   // read from RawHID with instant timeout
   int n = RawHID.recv(buffer, 0);
   
   // no packet
   if (n == 0) return;
   
+  /*for (int i = 0; i < n; i++) {
+    if (i % 8 == 0) {
+      Serial.println();
+    }
+    print_hex(buffer[i], 8);
+  }
+  Serial.println();
+  */
   // check magic bytes
   if (buffer[0] != MAGIC_BYTE0 || buffer[1] != MAGIC_BYTE1) return;
   
@@ -46,7 +84,7 @@ void loop() {
   
   // check packet terminator
   if (buffer[dataLength + HEADER_LENGTH] != PACKET_TERMINATOR) return;
-  
+
   // set pointer to start of data
   int ptr = HEADER_LENGTH;
   int dataEnd = ptr + dataLength;
@@ -110,27 +148,18 @@ int handleCommand(byte *buffer, int ptr, int maxDataSize) {
       outPtr = 0;
     }
     
-    outPtr += handler.handler(&buffer[ptr], &outBuffer[outPtr]);
+    int hret = handler.handler(&buffer[ptr], &outBuffer[outPtr]);
+    if (hret < 0) return hret;
+    outPtr += hret;
     return handler.inSize;
   }
   
   return INVALID_CMD;
 }
 
-boolean setChannel(int channel, byte val) {
-  // validate channel first
-  if (!isValidChannel(channel)) return false;
-  
-  if (isPWMChannel(channel)) {
-    analogWrite(pwmPin(channel), val);
-  } else {
-    T3ShiftPWM.m_values[channel] = val;
-  }
-  
-  return true;
-}
-
 boolean setRGB(int channel, byte r, byte g, byte b) {
+  channel = channel * 3;
+  
   // validate channel first
   if (!isValidChannel(channel)) return false;
   
@@ -147,12 +176,6 @@ boolean setRGB(int channel, byte r, byte g, byte b) {
   }
   
   return true;
-}
-
-void setAllChannels(byte val) {
-  forEachChannel(i) {
-    setChannel(i, val);
-  }
 }
 
 void setAllRGBs(byte r, byte g, byte b) {

@@ -4,10 +4,8 @@ const Command handlers[] = {
   // command code,  inSize, outSize, handler
   { CMD_PRINTLOAD, NO_DATA, NO_DATA, handle_printLoad },
   { CMD_ALLOFF,    NO_DATA, NO_DATA, handle_allOff },
-  { CMD_ALLSET,          1, NO_DATA, handle_allSet },
   { CMD_ALLRGB,          3, NO_DATA, handle_allRGB },
   { CMD_CHANOFF,         1, NO_DATA, handle_chanOff },
-  { CMD_CHANSET,         2, NO_DATA, handle_chanSet },
   { CMD_CHANRGB,         4, NO_DATA, handle_chanRGB },
   { CMD_NUMCHANS,  NO_DATA,       2, handle_numChans },
 };
@@ -22,15 +20,7 @@ int handle_printLoad(byte* inData, byte* outData) {
 }
 
 int handle_allOff(byte* inData, byte* outData) {
-  setAllChannels(0);
-  
-  return NO_DATA;
-}
-
-int handle_allSet(byte* inData, byte* outData) {
-  byte val = inData[0];
-  
-  setAllChannels(val);
+  setAllRGBs(0, 0, 0);
   
   return NO_DATA;
 }
@@ -47,17 +37,8 @@ int handle_allRGB(byte* inData, byte* outData) {
 
 int handle_chanOff(byte* inData, byte* outData) {
   int chan = inData[0];
-  
-  setChannel(chan, 0);
-  
-  return NO_DATA;
-}
 
-int handle_chanSet(byte* inData, byte* outData) {
-  int chan = inData[0];
-  byte val = inData[1];
-  
-  setChannel(chan, val);
+  if (!setRGB(chan, 0, 0, 0)) return CHAN_ERROR;
   
   return NO_DATA;
 }
@@ -67,8 +48,8 @@ int handle_chanRGB(byte* inData, byte* outData) {
   byte r = inData[1];
   byte g = inData[2];
   byte b = inData[3];
-  
-  setRGB(chan, r, g, b);
+
+  if (!setRGB(chan, r, g, b)) return CHAN_ERROR;
   
   return NO_DATA;
 }
